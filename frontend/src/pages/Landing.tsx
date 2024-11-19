@@ -4,9 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { codeState, socketState, playerState, publicKeyState } from '../atoms/atom';
 import { useRecoilState } from 'recoil';
 import { useEffect, useState } from 'react';
-import { getJWT, removeJWT } from '../utils/jwt-storage';
-import { verifyToken } from '../utils/verify-tokens';
-
 
 export const Landing = () => {
     const [publicKey, setPublicKey] = useRecoilState(publicKeyState);
@@ -22,30 +19,46 @@ export const Landing = () => {
         setCode(event.target.value);
     };
 
+    // useEffect(() => {
+    //     const verify = async () => {
+    //         try {
+    //             const token = getJWT();
+    //             if (!token) {
+    //                 window.location.href = "https://nixarcade.fun";
+    //                 return;
+    //             }
+    //             const data = await verifyToken(token, "apisecret");
+    //             if (data == null || data.verified == false) {
+    //                 window.location.href = "https://nixarcade.fun";
+    //             } else {
+    //                 setPublicKey(data.publicKey);
+    //                 removeJWT();
+    //             }
+    //         } catch (e) {
+    //             console.error("Error verifying token:", e);
+    //             alert("Token Verification Failed");
+    //             window.location.href = "https://nixarcade.fun";
+    //             console.log(e);
+    //         }
+    //     };
+    //     verify();
+    // }, []);
+
     useEffect(() => {
-        const verify = async () => {
-            try {
-                const token = getJWT();
-                if (!token) {
-                    window.location.href = "https://nixarcade.fun";
-                    return;
-                }
-                const data = await verifyToken(token, "apisecret");
-                if (data == null || data.verified == false) {
-                    window.location.href = "https://nixarcade.fun";
-                } else {
-                    setPublicKey(data.publicKey);
-                    removeJWT();
-                }
-            } catch (e) {
-                console.error("Error verifying token:", e);
-                alert("Token Verification Failed");
-                window.location.href = "https://nixarcade.fun";
-                console.log(e);
+        window.addEventListener("message", (event) => {
+            if (event.origin !== "https://nixarcade.fun") {
+                console.error("Origin not allowed");
+                return;
             }
-        };
-        verify();
-    }, []);
+        
+            const { publicKey } = event.data;
+            if (publicKey) {
+                console.log("Received publicKey:", publicKey);
+        
+                setPublicKey(publicKey);
+            }
+        });
+    })
 
 
     const triggerPopup = (isWaiting: boolean) => {
